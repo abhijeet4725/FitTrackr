@@ -1,0 +1,15 @@
+# Dependencies — installed fresh inside the image
+node_modules/
+
+# Production build output — not needed for dev container
+dist/
+
+# IDE and OS files
+.git/
+.gitignore
+*.md
+.DS_Store
+
+# Local environment overrides
+.env.local
+.env.*.local

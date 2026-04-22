@@ -1,0 +1,8 @@
+# FinTrack root .gitignore
+
+# ── Docker / Environment ──────────────────────────────────────────────────────
+.env           # contains real secrets — never commit this
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

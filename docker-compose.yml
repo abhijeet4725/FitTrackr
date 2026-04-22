@@ -1,0 +1,61 @@
+services:
+
+  # ─── PostgreSQL Database ────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: fintrackr_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fintrackr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fintrackr123}
+      POSTGRES_DB: ${POSTGRES_DB:-fintrackr}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # mapped to 5433 on host to avoid conflict with local PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fintrackr}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── Flask Backend ──────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: fintrackr_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_APP: run.py
+      FLASK_ENV: development
+      # "db" resolves to the postgres container inside the Docker network
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fintrackr}:${POSTGRES_PASSWORD:-fintrackr123}@db:5432/${POSTGRES_DB:-fintrackr}
+      SECRET_KEY: ${SECRET_KEY:-fintrackr-super-secret-key}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-fintrackr-jwt-secret-key}
+      JWT_ACCESS_TOKEN_EXPIRES: ${JWT_ACCESS_TOKEN_EXPIRES:-1440}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app   # live reload: local changes reflect instantly
+    restart: on-failure
+
+  # ─── React / Vite Frontend ──────────────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: fintrackr_frontend
+    depends_on:
+      - backend
+    environment:
+      # Tells vite.config.js to proxy /api → backend container
+      VITE_API_TARGET: http://backend:5000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app           # live reload for src changes
+      - /app/node_modules         # preserve container's node_modules
+    restart: on-failure
+
+# ─── Named Volumes ────────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+    name: fintrackr_pgdata

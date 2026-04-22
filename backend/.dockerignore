@@ -1,0 +1,26 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment — dependencies are installed inside the image
+venv/
+env/
+.venv/
+
+# Local environment file — secrets must NOT be baked into the image
+.env
+
+# Test output
+tests/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# IDE and OS files
+.git/
+.gitignore
+*.md
+.DS_Store
